@@ -52,6 +52,14 @@ def main():
     ventana.title("Mi App en Ubuntu")
     ventana.geometry("400x500")
 
+    try:
+        foto_logo = tk.PhotoImage(file="logo.png")
+        ventana.iconphoto(False, foto_logo)
+        # TRUCO: Guardamos una referencia manual para que Python no la borre
+        ventana.logo_referencia = foto_logo 
+    except Exception as e:
+        print(f"Error: {e}")
+
     tk.Label(ventana, text="Gestor de Datos", font=("Arial", 14, "bold")).pack(pady=10)
     tk.Label(ventana, text="Introduce tu nombre:").pack()
 
