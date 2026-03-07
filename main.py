@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox
 from temperatura import temperatura
-from cpu import cpu
+import subprocess
 
 # Declaramos las variables globales para que todas las funciones las reconozcan
 ventana = None
@@ -36,7 +36,7 @@ def buscar_componente():
     # Leemos lo que puso en la segunda caja
     componente = entrada_comp.get().lower() 
     
-    if componente == "temperatura":
+    if componente == "temperatura" or componente == "temp":
         lectura = temperatura()
         messagebox.showinfo("Lectura Temperatura", f"¡Hola {usuario}! La temperatura es: {lectura}")
     elif componente == "cpu":
@@ -44,6 +44,18 @@ def buscar_componente():
         messagebox.showinfo(f"Lectura CPU", f"{resultado}")
     else:
         messagebox.showwarning("Error", "Escribe 'temperatura' o 'cpu'")
+
+def cpu():
+    try:
+        # text=True decodifica automáticamente a string
+        resultado = subprocess.check_output(["./cpu_motor"], text=True)
+        return resultado.strip()
+    except FileNotFoundError:
+        return "Error: No se encuentra './cpu_motor'. ¿Lo compilaste?"
+    except subprocess.CalledProcessError as e:
+        return f"El programa C falló (Código {e.returncode})"
+    except Exception as e:
+        return f"Error inesperado: {e}"
 
 def main():
     global ventana, entrada_nombre, boton_saludar
@@ -55,7 +67,6 @@ def main():
     try:
         foto_logo = tk.PhotoImage(file="logo.png")
         ventana.iconphoto(False, foto_logo)
-        # TRUCO: Guardamos una referencia manual para que Python no la borre
         ventana.logo_referencia = foto_logo 
     except Exception as e:
         print(f"Error: {e}")
