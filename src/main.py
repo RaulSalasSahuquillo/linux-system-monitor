@@ -3,7 +3,7 @@ from tkinter import messagebox
 from temperatura import temperatura
 import subprocess
 
-# Declaramos las variables globales para que todas las funciones las reconozcan
+# Variables de las funciones
 ventana = None
 entrada_nombre = None
 entrada_comp = None
@@ -61,7 +61,7 @@ def main():
     global ventana, entrada_nombre, boton_saludar
     
     ventana = tk.Tk()
-    ventana.title("Mi App en Ubuntu")
+    ventana.title("Estado del ordenador")
     ventana.geometry("400x500")
 
     try:
