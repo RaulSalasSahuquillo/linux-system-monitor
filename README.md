@@ -1,100 +1,123 @@
-# Monitor de Recursos del Sistema para Linux
+# /usr/bin/sysmon -> Linux System Resource Monitor
 
-Este proyecto consiste en una aplicación de escritorio desarrollada para sistemas operativos basados en Linux. Proporciona una interfaz gráfica de usuario (GUI) que permite monitorizar parámetros clave de hardware, tales como la temperatura del sistema y el porcentaje de uso de la CPU.
+> "Executing monitor initialize..."
+> [OK] Hardware sensors mapped.
+> [OK] CPU stats engine connected.
+> [OK] Ready to monitor.
 
-La arquitectura de la aplicación combina la facilidad de desarrollo de interfaces con Python y la alta eficiencia en la lectura de bajo nivel mediante un motor compilado en lenguaje C.
+A desktop application designed for Linux operating systems. It provides a graphical user interface (GUI) to monitor key hardware metrics such as CPU usage percentage and system temperature.
 
----
-
-## Características Principales
-
-*   **Interfaz Gráfica Intuitiva:** Desarrollada con Tkinter, que gestiona el flujo de la aplicación y la interacción con el usuario.
-*   **Lectura de Temperatura:** Obtención directa del estado térmico del procesador interactuando con los archivos virtuales del sistema (`/sys/class/thermal`).
-*   **Cálculo de Uso de CPU:** Motor escrito en C que calcula el uso de CPU comparando diferencias en los tiempos del sistema a partir de `/proc/stat` con un intervalo de muestreo de 100 ms.
-*   **Validación de Ejecutables:** Manejo de excepciones en Python para prevenir fallos si el motor compilado en C no está presente o falla durante la ejecución.
+The architecture combines a Python-based Tkinter frontend with a high-efficiency C-compiled background engine for low-level system reads.
 
 ---
 
-## Arquitectura de la Aplicación
+## /usr/bin/features
 
-La interacción entre la interfaz de usuario en Python y el motor de bajo nivel en C se estructura según el siguiente esquema:
+* **Graphical User Interface:** Built with Tkinter, managing application flow and user interaction.
+* **Thermal Monitoring:** Reads CPU core temperature directly from Linux virtual system files (/sys/class/thermal).
+* **CPU Usage Calculation:** High-performance engine written in C that measures CPU utilization by parsing /proc/stat with a 100 ms sampling interval.
+* **Robust Executable Validation:** Advanced exception handling in Python to prevent application crashes if the compiled C engine is missing or fails.
+
+---
+
+## /etc/architecture
+
+The interaction between the Python GUI and the low-level C engine operates as follows:
 
 ```mermaid
 graph TD
-    subgraph Espacio de Usuario
-        Usuario([Usuario]) -->|Interacción| GUI[Interfaz Gráfica - Python / Tkinter]
-        GUI -->|Módulo Interno| TempMod[temperatura.py]
-        GUI -->|Llamada Subproceso| CPUMotor[Motor C - cpu_motor]
+    subgraph User Space
+        User([User]) -->|Interaction| GUI[GUI - Python / Tkinter]
+        GUI -->|Internal Module| TempMod[temperature.py]
+        GUI -->|Subprocess Call| CPUMotor[C Engine - cpu_motor]
     end
 
-    subgraph Espacio del Kernel
-        TempMod -->|Lectura de Archivo| SysThermal[sys/class/thermal/thermal_zone0/temp]
-        CPUMotor -->|Lectura de Tics| ProcStat[proc/stat]
+    subgraph Kernel Space
+        TempMod -->|Read File| SysThermal[sys/class/thermal/thermal_zone0/temp]
+        CPUMotor -->|Read Tics| ProcStat[proc/stat]
     end
 ```
 
 ---
 
-## Estructura del Proyecto
+## /home/raul/projects/sysmon/structure
 
-| Archivo | Lenguaje | Descripción |
+```text
+.
+├── .gitignore
+├── LICENSE
+├── Makefile                 # Build automation and execution
+├── README.md                # Project documentation
+├── CONTRIBUTING.md          # Guide for developers and contributors
+├── requirements.txt         # Operating system requirements
+└── src/
+    ├── assets/              # Static graphic assets
+    │   └── logo.png         # Graphical interface icon
+    ├── cpu.c                # C source code (CPU stats engine)
+    ├── main.py              # Main Python script (Tkinter GUI)
+    └── temperature.py       # Temperature sensor logic in Python
+```
+
+| File / Folder | Language | Description |
 | :--- | :--- | :--- |
-| `main.py` | Python | Archivo principal que inicializa la GUI de Tkinter y coordina las llamadas a los sensores. |
-| `temperatura.py` | Python | Módulo encargado de leer y formatear la información térmica del procesador. |
-| `cpu.c` | C | Código fuente que procesa los "tics" de CPU y calcula el porcentaje de uso actual. |
-| `cpu_motor` | Binario | Ejecutable compilado a partir de `cpu.c` que actúa como motor de cálculo de CPU. |
-| `logo.png` | Imagen | Imagen utilizada como icono de la ventana principal de la interfaz. |
-| `LICENSE` | Texto | Licencia bajo la cual se distribuye el proyecto. |
+| `Makefile` | Make | Automation script to compile, run, and clean the project. |
+| `requirements.txt` | Text | Details system-level dependencies (such as GCC and Tkinter). |
+| `CONTRIBUTING.md` | Markdown | Contribution guide detailing coding standards and developer workflow. |
+| `src/main.py` | Python | Application entry point that handles the Tkinter GUI and coordinate measurements. |
+| `src/temperature.py` | Python | Retrieves temperature readings from the Linux virtual interface (/sys/class/thermal). |
+| `src/cpu.c` | C | Source code for the high-performance CPU utilization calculation engine. |
+| `src/assets/logo.png` | Image | Main icon used by the graphical user interface. |
+| `LICENSE` | Text | Apache License 2.0 license file. |
 
 ---
 
-## Requisitos de Ejecución
+## /usr/bin/install
 
-Para poder compilar y ejecutar este software, su entorno debe cumplir los siguientes requisitos:
+To simplify setup, a Makefile is provided to automate compilation and execution.
 
-*   **Sistema Operativo:** Distribución Linux (Ubuntu, Debian, Fedora o similares) con acceso a `/sys` y `/proc`.
-*   **Python:** Versión 3.6 o superior instalada.
-*   **Tkinter:** Generalmente incluido en Python. En distribuciones basadas en Debian/Ubuntu, se instala mediante:
-    ```bash
-    sudo apt-get install python3-tk
-    ```
-*   **Compilador:** GCC (GNU Compiler Collection) para compilar el código en C.
-
----
-
-## Compilación e Instalación
-
-### 1. Compilar el Motor de CPU
-El código fuente en C debe compilarse para generar el ejecutable que requiere `main.py`:
-
+### 1. Compilation
+To compile the C engine (src/cpu.c) and output the executable to src/cpu_motor:
 ```bash
-gcc -O2 cpu.c -o cpu_motor
+make
 ```
 
 > [!NOTE]
-> El compilador optimizará el código con el flag `-O2` para asegurar que el cálculo sea lo más rápido y preciso posible.
+> The compiler optimizes the binary using the -O2 flag and enables all warnings (-Wall) to ensure safety and peak performance.
 
-### 2. Ejecutar la Aplicación
-Una vez compilado el motor, inicia la aplicación ejecutando el script de Python:
-
+### 2. Execution
+To build (if needed) and run the application in a single command:
 ```bash
-python3 main.py
+make run
+```
+
+Alternatively, you can run the Python script directly:
+```bash
+python3 src/main.py
+```
+
+### 3. Cleanup
+To clean compiled binaries and Python caching directories:
+```bash
+make clean
 ```
 
 ---
 
-## Detalles Técnicos de Funcionamiento
+## /var/log/specs
 
-### Lectura de Temperatura
-La temperatura se obtiene mediante la lectura del sensor térmico primario (`thermal_zone0`) de Linux:
-$$\text{Temperatura (°C)} = \frac{\text{Valor leído de } \texttt{/sys/class/thermal/thermal\_zone0/temp}}{1000}$$
+### Temperature Readings
+Temperature is calculated by reading the system's primary thermal sensor (thermal_zone0):
+$$\text{Temperature (°C)} = \frac{\text{Value from } \texttt{/sys/class/thermal/thermal\_zone0/temp}}{1000}$$
 
-Si el sensor no está disponible o el sistema no es compatible, la aplicación devolverá el mensaje `"Sensor no encontrado"`.
+If the sensor is unavailable, the application returns "Sensor not found".
 
-### Cálculo de CPU
-El motor en C lee las estadísticas de `/proc/stat` en dos momentos temporales diferentes separados por un lapso de 100 ms:
-1. Se realiza la primera lectura de los tiempos transcurridos en diferentes estados (usuario, kernel, ocioso, etc.).
-2. Se realiza una espera controlada de 100 ms (`usleep(100000)`).
-3. Se realiza la segunda lectura.
-4. Se calcula el porcentaje de uso con la fórmula:
-$$\text{Uso CPU (\%)} = 100 \times \frac{\Delta\text{Total} - \Delta\text{Ocioso}}{\Delta\text{Total}}$$
+### CPU Calculation
+The C-compiled engine reads /proc/stat statistics at two distinct moments separated by a 100 ms interval:
+1. Performs the first reading of processor states (user, kernel, idle, etc.).
+2. Suspends execution for 100 ms (usleep(100000)).
+3. Performs the second reading.
+4. Calculates CPU usage with the formula:
+$$\text{CPU Usage (\%)} = 100 \times \frac{\Delta\text{Total} - \Delta\text{Idle}}{\Delta\text{Total}}$$
+
+---
+"Talk is cheap. Show me the code." - Linus Torvalds

@@ -1,86 +1,92 @@
 import tkinter as tk
 from tkinter import messagebox
-from temperatura import temperatura
+from temperature import get_temperature
 import subprocess
+import os
 
-# Variables de las funciones
-ventana = None
-entrada_nombre = None
-entrada_comp = None
-boton_saludar = None
+# Base directory of the script
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-def mostrar_saludo():
-    global entrada_comp # Necesitamos avisar que usaremos la global
+# Function variables (Tkinter references)
+window = None
+name_entry = None
+comp_entry = None
+greet_button = None
+
+def show_greeting():
+    global comp_entry # Declare comp_entry as global to modify it
     
-    nombre = entrada_nombre.get()
+    name = name_entry.get()
     
-    if nombre:
-        messagebox.showinfo("Saludo", f"¡Hola {nombre}, bienvenido a tu app!")
+    if name:
+        messagebox.showinfo("Greeting", f"Hello {name}, welcome to your app!")
         
-        # Si no existe la segunda caja, la creamos
-        if entrada_comp is None:
-            tk.Label(ventana, text="Elige componente (temperatura / cpu):").pack()
+        # If the second input field does not exist, create it
+        if comp_entry is None:
+            tk.Label(window, text="Choose component (temperature / cpu):").pack()
             
-            entrada_comp = tk.Entry(ventana, width=30)
-            entrada_comp.pack(pady=5)
+            comp_entry = tk.Entry(window, width=30)
+            comp_entry.pack(pady=5)
             
-            tk.Button(ventana, text="Buscar", command=buscar_componente, bg="#2ecc71", fg="white").pack(pady=10)
+            tk.Button(window, text="Search", command=search_component, bg="#2ecc71", fg="white").pack(pady=10)
             
-            # Desactivamos el botón para que no se repita el proceso
-            boton_saludar.config(state="disabled")
+            # Disable the greeting button to prevent duplication
+            greet_button.config(state="disabled")
     else:
-        messagebox.showwarning("Error", "Por favor, escribe tu nombre.")
+        messagebox.showwarning("Error", "Please enter your name.")
 
-def buscar_componente():
-    usuario = entrada_nombre.get()
-    # Leemos lo que puso en la segunda caja
-    componente = entrada_comp.get().lower() 
+def search_component():
+    user = name_entry.get()
+    # Read what the user typed in the second input field
+    component = comp_entry.get().lower() 
     
-    if componente == "temperatura" or componente == "temp":
-        lectura = temperatura()
-        messagebox.showinfo("Lectura Temperatura", f"¡Hola {usuario}! La temperatura es: {lectura}")
-    elif componente == "cpu":
-        resultado = cpu()
-        messagebox.showinfo(f"Lectura CPU", f"{resultado}")
+    if component == "temperatura" or component == "temp" or component == "temperature":
+        reading = get_temperature()
+        messagebox.showinfo("Temperature Reading", f"Hello {user}! The temperature is: {reading}")
+    elif component == "cpu":
+        result = get_cpu_usage()
+        messagebox.showinfo("CPU Reading", f"{result}")
     else:
-        messagebox.showwarning("Error", "Escribe 'temperatura' o 'cpu'")
+        messagebox.showwarning("Error", "Please enter 'temperature' or 'cpu'")
 
-def cpu():
+def get_cpu_usage():
     try:
-        # text=True decodifica automáticamente a string
-        resultado = subprocess.check_output(["./cpu_motor"], text=True)
-        return resultado.strip()
+        motor_path = os.path.join(BASE_DIR, "cpu_motor")
+        # text=True automatically decodes the output as a string
+        result = subprocess.check_output([motor_path], text=True)
+        return result.strip()
     except FileNotFoundError:
-        return "Error: No se encuentra './cpu_motor'. ¿Lo compilaste?"
+        return f"Error: 'cpu_motor' not found in {BASE_DIR}. Did you compile it?"
     except subprocess.CalledProcessError as e:
-        return f"El programa C falló (Código {e.returncode})"
+        return f"The C program failed (Exit Code {e.returncode})"
     except Exception as e:
-        return f"Error inesperado: {e}"
+        return f"Unexpected error: {e}"
 
 def main():
-    global ventana, entrada_nombre, boton_saludar
+    global window, name_entry, greet_button
     
-    ventana = tk.Tk()
-    ventana.title("Estado del ordenador")
-    ventana.geometry("400x500")
+    window = tk.Tk()
+    window.title("System Status")
+    window.geometry("400x500")
 
     try:
-        foto_logo = tk.PhotoImage(file="logo.png")
-        ventana.iconphoto(False, foto_logo)
-        ventana.logo_referencia = foto_logo 
+        logo_path = os.path.join(BASE_DIR, "assets", "logo.png")
+        logo_photo = tk.PhotoImage(file=logo_path)
+        window.iconphoto(False, logo_photo)
+        window.logo_reference = logo_photo 
     except Exception as e:
-        print(f"Error: {e}")
+        print(f"Error loading logo from {logo_path}: {e}")
 
-    tk.Label(ventana, text="Gestor de Datos", font=("Arial", 14, "bold")).pack(pady=10)
-    tk.Label(ventana, text="Introduce tu nombre:").pack()
+    tk.Label(window, text="Data Manager", font=("Arial", 14, "bold")).pack(pady=10)
+    tk.Label(window, text="Enter your name:").pack()
 
-    entrada_nombre = tk.Entry(ventana, width=30)
-    entrada_nombre.pack(pady=5)
+    name_entry = tk.Entry(window, width=30)
+    name_entry.pack(pady=5)
 
-    boton_saludar = tk.Button(ventana, text="Saludar y Continuar", command=mostrar_saludo, bg="#3498db", fg="white")
-    boton_saludar.pack(pady=20)
+    greet_button = tk.Button(window, text="Greet and Continue", command=show_greeting, bg="#3498db", fg="white")
+    greet_button.pack(pady=20)
 
-    ventana.mainloop()
+    window.mainloop()
 
 if __name__ == '__main__':
     main()
